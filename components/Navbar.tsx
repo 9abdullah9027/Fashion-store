@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { ShoppingBag, Search, Menu, ChevronDown, Heart, X, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/GlobalWishlist'; // Standardized import
+import { useWishlist } from '@/context/GlobalWishlist'; // Fixed Casing Error
 import SearchOverlay from '@/components/SearchOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const [logoFailed, setLogoFailed] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Mobile Menu State
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
 
@@ -43,7 +43,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             
-            {/* MOBILE MENU BUTTON - NOW WORKING */}
+            {/* MOBILE MENU BUTTON */}
             <div className="flex items-center md:hidden flex-1">
               <button 
                 onClick={() => setIsMenuOpen(true)}
@@ -55,6 +55,11 @@ export default function Navbar() {
 
             {/* DESKTOP NAV */}
             <nav className="hidden md:flex flex-1 items-center justify-start gap-10 h-full">
+              {/* SHOP ALL / BRANDS OPTION */}
+              <Link href="/shop" className="text-sm font-bold uppercase tracking-widest text-gray-900 hover:text-brand-magenta transition-colors">
+                Store
+              </Link>
+              
               {categories.map((cat) => (
                 <div key={cat.name} className="group relative h-full flex items-center">
                   <Link href={cat.href} className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-gray-900 group-hover:text-brand-magenta transition-colors">
@@ -144,6 +149,13 @@ export default function Navbar() {
               </div>
 
               <div className="flex-1 overflow-y-auto py-4">
+                <Link 
+                  href="/shop" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center px-6 py-5 text-sm font-bold uppercase tracking-widest text-brand-dark border-b border-gray-50"
+                >
+                  Shop All / Brands
+                </Link>
                 {categories.map((cat) => (
                   <div key={cat.name} className="border-b border-gray-50">
                     <Link 
@@ -164,8 +176,8 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              <div className="p-8 border-t border-gray-100 bg-gray-50">
-                <p className="text-[10px] text-center font-bold uppercase tracking-widest text-gray-400">
+              <div className="p-8 border-t border-gray-100 bg-gray-50 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
                   Fabricated Fabrics | Muscat
                 </p>
               </div>

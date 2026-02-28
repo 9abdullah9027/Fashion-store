@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Star, Truck, ShieldCheck, Ruler, Minus, Plus, ShoppingBag, Loader2, X, ZoomIn, Heart, Flame } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/GlobalWishlist'; 
+import { useWishlist } from '@/context/GlobalWishlist'; // Standardized naming
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,7 +35,6 @@ export default function ProductPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState('center center');
 
-  // Hover Zoom Logic
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!mainImageRef.current || !containerRef.current) return;
     const { left, top, width, height } = containerRef.current.getBoundingClientRect();
@@ -48,19 +47,17 @@ export default function ProductPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        // 1. Fetch Main Product
         const docRef = doc(db, 'products', params.id as string);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const currentProduct = { id: docSnap.id, ...data };
-          setProduct(currentProduct);
+          setProduct({ id: docSnap.id, ...data });
           setActiveImage(data.images?.[0] || data.image);
           if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
           else setSelectedSize('Unstitched');
 
-          // 2. Fetch Related Products (Same Category)
+          // Fetch Related Products
           const relatedQuery = query(
             collection(db, 'products'),
             where('category', '==', data.category),
@@ -69,8 +66,8 @@ export default function ProductPage() {
           const relatedSnap = await getDocs(relatedQuery);
           const relatedData = relatedSnap.docs
             .map(d => ({ id: d.id, ...d.data() }))
-            .filter(p => p.id !== params.id) // Exclude current product
-            .slice(0, 4); // Show only 4
+            .filter(p => p.id !== params.id)
+            .slice(0, 4);
           setRelatedProducts(relatedData);
         }
       } catch (error) { 
@@ -105,34 +102,15 @@ export default function ProductPage() {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-brand-magenta"><Loader2 className="animate-spin" size={40} /></div>;
-  if (!product) return <div className="min-h-screen flex items-center justify-center text-gray-500 uppercase tracking-widest text-xs font-bold">Product Not Found</div>;
+  if (!product) return <div className="min-h-screen flex items-center justify-center">Product Not Found</div>;
 
   const imageList = Array.isArray(product.images) ? product.images : [product.image];
   const isLiked = isInWishlist(product.id);
   const stockLevel = product.stock !== undefined ? product.stock : 100; 
   const isLowStock = stockLevel < 5 && stockLevel > 0;
 
-  // Structured Data (JSON-LD) for SEO
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.title,
-    image: activeImage,
-    description: product.description,
-    brand: { '@type': 'Brand', name: product.brand },
-    offers: {
-      '@type': 'Offer',
-      price: product.price,
-      priceCurrency: 'OMR',
-      availability: stockLevel > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-    },
-  };
-
   return (
     <div className="bg-white min-h-screen pt-8 pb-24 relative">
-      {/* SEO Schema */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link href="/shop" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-brand-magenta transition-colors mb-8">
           <ArrowLeft size={16} /> Back to Shop
@@ -140,7 +118,6 @@ export default function ProductPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-24">
           
-          {/* IMAGE SECTION */}
           <div className="space-y-4">
             <div 
               ref={containerRef}
@@ -151,7 +128,7 @@ export default function ProductPage() {
               <img 
                 ref={mainImageRef}
                 src={activeImage} 
-                alt={`${product.title} by ${product.brand}`} 
+                alt={product.title} 
                 className="w-full h-full object-cover transition-transform duration-300 ease-out origin-center group-hover:scale-[2.0]"
                 style={{ transformOrigin: zoomOrigin }}
               />
@@ -163,17 +140,16 @@ export default function ProductPage() {
             </div>
 
             {imageList.length > 1 && (
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-4 overflow-x-auto pb-2">
                 {imageList.map((img: string, idx: number) => (
                   <button key={idx} onClick={() => setActiveImage(img)} className={`relative w-20 h-24 flex-shrink-0 border-2 rounded-sm overflow-hidden transition-all ${activeImage === img ? 'border-brand-dark opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}>
-                    <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* DETAILS SECTION */}
           <div className="flex flex-col">
             <div className="flex justify-between items-start">
                <div>
@@ -196,7 +172,6 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* SCARCITY ALERT */}
             {isLowStock && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -276,7 +251,7 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* YOU MAY ALSO LIKE SECTION */}
+        {/* RELATED PRODUCTS - FIXED IMAGE PATHS */}
         {relatedProducts.length > 0 && (
           <section className="py-24 border-t border-gray-100">
             <div className="flex justify-between items-end mb-12">
@@ -293,7 +268,7 @@ export default function ProductPage() {
                 <ProductCard 
                   key={p.id}
                   id={p.id}
-                  image={p.image}
+                  image={p.images?.[0] || p.image} // FIXED: Checking for images array
                   brand={p.brand}
                   title={p.title}
                   price={p.price}
@@ -304,7 +279,6 @@ export default function ProductPage() {
         )}
       </div>
 
-      {/* MODALS */}
       <AnimatePresence>
         {isZoomOpen && (
           <motion.div 
